@@ -8,6 +8,7 @@ import {
   Revenue,
 } from './definitions';
 import { formatCurrency } from './utils';
+import { notFound } from 'next/navigation';
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
 
@@ -154,12 +155,18 @@ export async function fetchInvoiceById(id: string) {
       WHERE invoices.id = ${id};
     `;
 
+    console.log('fetchInvoiceById id=', id, 'rows=', data.length);
+    if (data.length === 0) {
+      notFound();
+    }
+
     const invoice = data.map((invoice) => ({
       ...invoice,
       // Convert amount from cents to dollars
       amount: invoice.amount / 100,
     }));
 
+    console.log('invoice:', invoice);
     return invoice[0];
   } catch (error) {
     console.error('Database Error:', error);
